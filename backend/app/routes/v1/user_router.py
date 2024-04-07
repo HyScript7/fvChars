@@ -1,17 +1,29 @@
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
-from ...database import get_db, Session
-from ...models import UserModel
-from ...schemas import user_schema, default_schema
-from ...services import user_service
+from ...database import Session, get_db
 from ...errors.user_errors import (
     EmailAlreadyTakenException,
+    InvalidLogin,
     UsernameAlreadyTakenException,
     UserNotFound,
-    InvalidLogin,
 )
+from ...middleware.sessions import get_user_session, UserSession
+from ...models import UserModel
+from ...schemas import default_schema, user_schema
+from ...services import user_service
 
 router: APIRouter = APIRouter()
+
+
+@router.get(
+    "/me",
+    response_model=user_schema.UserResponse,
+    responses={401: {"model": default_schema.GenericHTTPException}},
+)
+async def whoami(
+    db: Session = Depends(get_db), session: UserSession = Depends(get_user_session)
+):
+    return session.user
 
 
 @router.post(
