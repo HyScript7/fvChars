@@ -1,5 +1,5 @@
-from typing_extensions import Unpack
-from pydantic import BaseModel, ConfigDict
+from typing_extensions import Optional
+from pydantic import BaseModel, Field
 
 
 class UserBase(BaseModel):
@@ -19,5 +19,10 @@ class UserResponse(UserBase):
     id: int
     email: str
 
-class UserSession(UserResponse):
-    token: str
+
+class UserToken(BaseModel):
+    token: Optional[str] = Field(None, description="JWT token or None if Guest")
+
+
+class UserSession(UserResponse, UserToken):
+    pass
