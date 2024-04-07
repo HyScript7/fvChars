@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from typing_extensions import Unpack
+from pydantic import BaseModel, ConfigDict
 
 
 class UserBase(BaseModel):
@@ -18,5 +19,5 @@ class UserResponse(UserBase):
     id: int
     email: str
 
-class UserSession(BaseModel):
+class UserSession(UserResponse):
     token: str
