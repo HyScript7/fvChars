@@ -48,10 +48,9 @@ def create_token(user: UserModel) -> str:
 def validate_token(db: Session, token: str) -> UserModel:
     try:
         data = jwt.decode(token, jwt_secret, algorithms=["HS256"])
-        return user_crud.get_user(db, id=data.get("id"))
     except JWTError:
         raise InvalidLogin()
-
+    return user_crud.get_user(db, id=data["id"])
 
 def session_user(db: Session, token: str) -> UserModel | None:
     try:
