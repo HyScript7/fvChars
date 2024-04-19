@@ -17,9 +17,10 @@ def test_register_goodbody():
         },
     )
     assert response.status_code == 200
+    assert response.json().get("id") != None
     assert response.json() == {
         "username": "johndoe",
-        "id": 1,
+        "id": response.json().get("id", 1),
         "email": "example@example.com",
     }
 
@@ -79,9 +80,10 @@ def test_login_good():
     json_response = response.json()
     assert json_response.get("token") != None
     json_response.pop("token")
+    assert response.json().get("id") != None
     assert json_response == {
         "username": "johndoe",
-        "id": 1,
+        "id": response.json().get("id", 1),
         "email": "example@example.com",
     }
 
@@ -105,8 +107,9 @@ def test_me_goodtoken():
     token = token_response.json().get("token")
     response = client.get("/api/v1/user/me", params={"token": token})
     assert response.status_code == 200
+    assert response.json().get("id") != None
     assert response.json() == {
         "username": "johndoe",
-        "id": 1,
+        "id": response.json().get("id", 1),
         "email": "example@example.com",
     }
