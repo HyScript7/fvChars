@@ -2,19 +2,18 @@ from typing import List
 
 from ... import Session
 from ..character_model import CharacterModel
-from ..user_model import UserModel
 
 
 def get_character(db: Session, id: int) -> CharacterModel:
     return db.get(CharacterModel, id)
 
 
-def get_all_characters(db: Session, user: UserModel) -> List[CharacterModel]:
-    return db.query(CharacterModel).filter_by(userid=user.id).all()
+def get_all_characters(db: Session, userid: int) -> List[CharacterModel]:
+    return db.query(CharacterModel).filter_by(userid=userid).all()
 
 
-def create_character(db: Session, user: UserModel) -> CharacterModel:
-    character: CharacterModel = CharacterModel(userid=user.id)
+def create_character(db: Session, userid: int) -> CharacterModel:
+    character: CharacterModel = CharacterModel(userid=userid)
     db.add(character)
     db.commit()
     db.refresh(character)
