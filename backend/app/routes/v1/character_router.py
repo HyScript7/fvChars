@@ -14,7 +14,7 @@ router: APIRouter = APIRouter()
     response_model=character_schema.CharacterResponse,
     responses={401: {"model": default_schema.GenericHTTPException}},
 )
-async def whoami(
+async def create(
     db: Session = Depends(get_db), session: UserSession = Depends(get_user_session)
 ):
     if session.is_guest:
@@ -24,3 +24,20 @@ async def whoami(
         )
     character = character_service.create_character(db, session.user)
     return character
+
+
+@router.get(
+    "/get",
+    response_model=list[character_schema.CharacterResponse],
+    responses={401: {"model": default_schema.GenericHTTPException}},
+)
+async def get_all(
+    db: Session = Depends(get_db), session: UserSession = Depends(get_user_session)
+):
+    if session.is_guest:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You must provide a token to view characters!",
+        )
+    characters = character_service.get_characters(db, session.user)
+    return characters
