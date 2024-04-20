@@ -11,6 +11,7 @@ class UserModel(Base):
     username = Column(String, unique=True, index=True)
     password = Column(String)
     characters = relationship("CharacterModel", backref="user")
+    titles = relationship("TitleModel", backref="user")
     def __init__(self, email, username, password):
         self.email = email
         self.username = username
