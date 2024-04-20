@@ -48,3 +48,23 @@ def test_chars_fetch_all():
         {"id": 1, "userid": userid},
         {"id": 2, "userid": userid},
     ]
+
+
+def test_chars_create_unauthorized():
+    response = client.post("/api/v1/character/create")
+    assert response.status_code == 401
+
+
+def test_chars_create_unauthorized_invalidtoken():
+    response = client.post("/api/v1/character/create", params={"token": "foo.bar.baz"})
+    assert response.status_code == 401
+
+
+def test_chars_fetch_all_unauthorized():
+    response = client.get("/api/v1/character/get")
+    assert response.status_code == 401
+
+
+def test_chars_fetch_all_unauthorized_invalidtoken():
+    response = client.get("/api/v1/character/get", params={"token": "foo.bar.baz"})
+    assert response.status_code == 401
