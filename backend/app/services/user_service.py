@@ -1,3 +1,6 @@
+from passlib.context import CryptContext
+
+
 from ..database.models.user_model import (
     User,
     UserSignin,
@@ -11,6 +14,8 @@ from .errors.user_errors import (
     UsernameAlreadyExistsError,
     UserDoesntExistError,
 )
+
+crypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 """
 TODO: Replace the entire get_user_by_username method with get_current_user(),
@@ -55,10 +60,10 @@ async def register(user_signup: UserSignup) -> User:
         raise UsernameAlreadyExistsError(user_signup.username)
     if await User.find_one(User.email == user_signup.email.lower()) is not None:
         raise EmailAlreadyExistsError(user_signup.email)
-    # TODO: Use passlib to hash password with salt
+    hashed_password = crypt_context.hash(user_signup.password)
     user = User(
         username=user_signup.username.lower(),
-        password=user_signup.password,
+        password=hashed_password,
         email=user_signup.email.lower(),
         displayname=user_signup.displayname,
     )
@@ -83,8 +88,7 @@ async def login(user_signin: UserSignin) -> User:
     )
     if user is None:
         raise InvalidCredentialsError()
-    # TODO: Use passlib and salted hashes for password validation
-    if user.password != user_signin.password:
+    if not crypt_context.verify(user_signin.password, user.password):
         raise InvalidCredentialsError()
     return user
 
@@ -120,11 +124,9 @@ async def update_password(user: User, password_update: PasswordUpdate) -> User:
     Returns:
         User: The updated user.
     """
-    # TODO: Use passlib and salted hashes for password validation
-    if password_update.current_password != user.password:
+    if not crypt_context.verify(password_update.current_password, user.password):
         raise InvalidCredentialsError()
-    # TODO: Use passlib to hash password with salt
-    user.password = password_update.new_password
+    user.password = crypt_context.hash(password_update.new_password)
     await user.save()
     return user
 
@@ -139,7 +141,6 @@ async def delete(user: User, user_password: str) -> None:
     Raises:
         InvalidCredentialsError: If the given current password is invalid.
     """
-    # TODO: Use passlib and salted hashes for current password validation
-    if user.password != user_password:
+    if not crypt_context.verify(user_password, user.password):
         raise InvalidCredentialsError()
     await user.delete()
