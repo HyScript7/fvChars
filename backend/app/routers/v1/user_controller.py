@@ -1,20 +1,24 @@
-from fastapi import HTTPException, status, Depends, APIRouter
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from ...database.models import user_model
+from ...schemas import generic_responses, user_responses
 from ...services import user_service
 from ...services.errors import user_errors
-from ...schemas import generic_responses
 
 user_controller: APIRouter = APIRouter(prefix="/users")
 
 
-# TODO: Return current session info here instead. Consider renaming to /self, /me or /whoami
 @user_controller.get(
     "/",
     status_code=status.HTTP_200_OK,
     response_model=generic_responses.GenericMessageResponse,
 )
-async def root():
-    return {"message": "Hello World"}
+async def root(
+    current_user: user_model.User = Depends(user_service.get_current_user),
+):
+    if current_user is None:
+        return {"message": "Hello Guest"}
+    return {"message": f"Hello {current_user.name}"}
 
 
 @user_controller.post(
@@ -36,7 +40,7 @@ async def register(user_signup: user_model.UserSignup):
 @user_controller.post(
     "/login",
     status_code=status.HTTP_200_OK,
-    response_model=user_model.UserPublic,
+    response_model=user_responses.JWTResponse,
     responses={401: {"model": generic_responses.GenericHTTPException}},
 )
 async def login(user_signin: user_model.UserSignin):
@@ -44,7 +48,7 @@ async def login(user_signin: user_model.UserSignin):
         user: user_model.User = await user_service.login(user_signin)
     except user_errors.InvalidCredentialsError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
-    return user
+    return {"token": await user_service.create_jwt(user)}
 
 
 @user_controller.post(
@@ -56,19 +60,18 @@ async def login(user_signin: user_model.UserSignin):
         404: {"model": generic_responses.GenericHTTPException},
     },
 )
-async def delete(user_credentials: user_model.UserSignin):
-    # TODO: Get the current user using a session instead of provided credentials.
+async def delete(
+    current_password: str,
+    current_user: user_model.User = Depends(user_service.required_get_current_user),
+):
     try:
-        user: user_model.User = await user_service.get_user_by_username(
-            user_credentials.username
+        await user_service.delete(current_user, current_password)
+    except user_errors.InvalidCredentialsError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You must provide a correct current password to delete your account.",
         )
-    except user_errors.UserDoesntExistError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    try:
-        await user_service.delete(user, user_credentials.password)
-    except user_errors.InvalidCredentialsError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
-    return {"message": "User deleted"}
+    return {"message": "User deleted successfully"}
 
 
 @user_controller.put(
@@ -79,16 +82,9 @@ async def delete(user_credentials: user_model.UserSignin):
 )
 async def update(
     displayname_update: user_model.DisplaynameUpdate,
-    user_credentials: user_model.UserSignin,
+    current_user: user_model.User = Depends(user_service.required_get_current_user),
 ):
-    # TODO: Get the current user using a session instead of provided credentials.
-    try:
-        user: user_model.User = await user_service.get_user_by_username(
-            user_credentials.username
-        )
-    except user_errors.UserDoesntExistError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    return await user_service.update_displayname(user, displayname_update)
+    return await user_service.update_displayname(current_user, displayname_update)
 
 
 @user_controller.post(
@@ -102,16 +98,9 @@ async def update(
 )
 async def update(
     password_update: user_model.PasswordUpdate,
-    user_credentials: user_model.UserSignin,
+    current_user: user_model.User = Depends(user_service.required_get_current_user),
 ):
-    # TODO: Get the current user using a session instead of provided credentials.
     try:
-        user: user_model.User = await user_service.get_user_by_username(
-            user_credentials.username
-        )
-    except user_errors.UserDoesntExistError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    try:
-        return await user_service.update_password(user, password_update)
+        return await user_service.update_password(current_user, password_update)
     except user_errors.InvalidCredentialsError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))

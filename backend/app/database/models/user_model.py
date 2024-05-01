@@ -45,6 +45,7 @@ class User(Document):
         email (str): The email of the user.
         displayname (Optional[str]): The display name of the user.
     """
+
     username: str
     password: str
     email: str
