@@ -21,6 +21,7 @@ from .errors.user_errors import (
     UserDoesntExistError,
     UsernameAlreadyExistsError,
     UserServiceError,
+    InvalidJWTError,
 )
 
 crypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -40,7 +41,17 @@ async def required_get_current_user(jwt_token: Annotated[str, Header()]) -> User
         User
     """
     try:
-        user = await get_current_user(jwt_token)
+        user = await get_user_from_jwt(jwt_token)
+    except OutdatedJWTError as e:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+        )
+    except ExpiredJWTError as e:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+        )
     except UserServiceError as e:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
@@ -76,6 +87,24 @@ async def get_current_user(
             status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+
+async def guest_if_invalid_get_current_user(
+    jwt_token: Annotated[str | None, Header()] = None
+) -> User | None:
+    """
+    Retrieves the current user based on the provided JWT token, returns None of the token is missing or invalid.
+
+    Args:
+        jwt_token (str | None, optional): The JWT token used to authenticate the user. Defaults to None.
+
+    Returns:
+        User | None: The current user if the JWT token is valid and the user exists in the database. Returns None if guest.
+    """
+    try:
+        return await get_user_from_jwt(jwt_token)
+    except UserServiceError:
+        return None
 
 
 async def get_user_from_jwt(
@@ -136,24 +165,6 @@ async def create_jwt(user: User) -> str:
         algorithm="HS256",
     )
     return token
-
-
-async def get_user_by_username(username: str) -> User:
-    """Returns the user with the given username.
-
-    Args:
-        username (str): The username of the user to retrieve.
-
-    Raises:
-        UserDoesntExistError: If the user with the given username does not exist.
-
-    Returns:
-        User: The user with the given username.
-    """
-    user = await User.find_one(User.username == username)
-    if user is None:
-        raise UserDoesntExistError(username)
-    return user
 
 
 async def register(user_signup: UserSignup) -> User:

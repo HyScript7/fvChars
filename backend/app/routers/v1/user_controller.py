@@ -16,7 +16,7 @@ user_controller: APIRouter = APIRouter(prefix="/users")
     response_model=generic_responses.GenericMessageResponse,
 )
 async def root(
-    current_user: user_model.User = Depends(user_service.get_current_user),
+    current_user: user_model.User = Depends(user_service.guest_if_invalid_get_current_user),
 ):
     if current_user is None:
         return {"message": "Hello Guest"}
