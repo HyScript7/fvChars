@@ -1,4 +1,6 @@
 from beanie import Document
 from typing import List
 
-models: List[Document] = []
+from .user_model import User
+
+models: List[Document] = [User]
