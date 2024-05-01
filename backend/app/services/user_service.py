@@ -178,7 +178,11 @@ async def register(user_signup: UserSignup) -> User:
         username=user_signup.username.lower(),
         password=hashed_password,
         email=user_signup.email.lower(),
-        displayname=user_signup.displayname,
+        displayname=(
+            user_signup.displayname
+            if user_signup.displayname is not None
+            else user_signup.username
+        ),
     )
     await user.insert()
     return user

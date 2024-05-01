@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 
 from ...database.models import user_model
 from ...schemas import generic_responses, user_responses
@@ -51,7 +53,7 @@ async def login(user_signin: user_model.UserSignin):
     return {"token": await user_service.create_jwt(user)}
 
 
-@user_controller.post(
+@user_controller.delete(
     "/delete",
     status_code=status.HTTP_200_OK,
     response_model=generic_responses.GenericMessageResponse,
@@ -61,7 +63,7 @@ async def login(user_signin: user_model.UserSignin):
     },
 )
 async def delete(
-    current_password: str,
+    current_password: Annotated[str, Body(embed=True)],
     current_user: user_model.User = Depends(user_service.required_get_current_user),
 ):
     try:
