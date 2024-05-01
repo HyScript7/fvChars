@@ -45,28 +45,10 @@ class User(Document):
         email (str): The email of the user.
         displayname (Optional[str]): The display name of the user.
     """
-
-    def __init__(
-        self,
-        username: str,
-        password: str,
-        email: str,
-        displayname: Optional[str] = None,
-    ):
-        """
-        Initialize a User object.
-
-        Args:
-            username (str): The username of the user.
-            password (str): The password of the user.
-            email (str): The email of the user.
-            displayname (Optional[str]): The display name of the user.
-        """
-        super().__init__()
-        self.username = username
-        self.password = password
-        self.email = email
-        self.displayname = displayname
+    username: str
+    password: str
+    email: str
+    displayname: str
 
     def __repr__(self) -> str:
         """
