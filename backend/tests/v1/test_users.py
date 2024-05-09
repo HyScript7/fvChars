@@ -11,6 +11,7 @@ LOGIN_ROUTE: str = USERS_ROOT + "/login"
 DELETE_ROUTE: str = USERS_ROOT + "/delete"
 UPDATE_DISPLAYNAME_ROUTE: str = USERS_ROOT + "/update/displayname"
 UPDATE_PASSWORD_ROUTE: str = USERS_ROOT + "/update/password"
+WHOAMI_ROUTE: str = USERS_ROOT + "/whoami"
 
 
 @pytest.mark.order(1)
@@ -162,6 +163,38 @@ async def test_root_valid_token(client: AsyncClient):
     )
     assert res.status_code == status.HTTP_200_OK
     assert res.json().get("message") == "Hello Jane Doe"
+
+
+@pytest.mark.order(3)
+@pytest.mark.asyncio
+async def test_whoami_bad_token(client: AsyncClient):
+    res = await client.get(
+        WHOAMI_ROUTE,
+        headers={"jwt-token": "not.valid.token"},
+    )
+    assert res.status_code == status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
+    assert res.json().get("username") == "guest"
+    assert res.json().get("displayname") == "Guest"
+
+
+@pytest.mark.order(3)
+@pytest.mark.asyncio
+async def test_whoami(client: AsyncClient):
+    login_response = await client.post(
+        LOGIN_ROUTE,
+        json={
+            "username": "janedoe",
+            "password": "foobar",
+        },
+    )
+    token = login_response.json().get("token")
+    res = await client.get(
+        WHOAMI_ROUTE,
+        headers={"jwt-token": token},
+    )
+    assert res.status_code == status.HTTP_200_OK
+    assert res.json().get("username") == "janedoe"
+    assert res.json().get("displayname") == "Jane Doe"
 
 
 @pytest.mark.order(3)
