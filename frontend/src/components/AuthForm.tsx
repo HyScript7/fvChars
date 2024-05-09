@@ -47,8 +47,7 @@ export const SignInForm: Component<FormProps> = ({ setter, toggle }) => {
               type="text"
               class="grow max-w-full"
               name="username"
-              placeholder="Username"
-              value="username"
+              placeholder="username"
             />
           </label>
           <label class="input input-bordered flex items-center gap-2">
@@ -56,8 +55,7 @@ export const SignInForm: Component<FormProps> = ({ setter, toggle }) => {
               type="password"
               class="grow max-w-full"
               name="password"
-              placeholder="Password"
-              value="Password"
+              placeholder="password"
             />
           </label>
           <div class="form-control">
@@ -109,8 +107,7 @@ export const SignUpForm: Component<SignUpFormProps> = ({ setter, toggle }) => {
               type="email"
               class="grow max-w-full"
               name="email"
-              placeholder="Email"
-              value="example@example.com"
+              placeholder="example@example.com"
             />
           </label>
           <label class="input input-bordered flex items-center gap-2">
@@ -118,8 +115,7 @@ export const SignUpForm: Component<SignUpFormProps> = ({ setter, toggle }) => {
               type="text"
               class="grow max-w-full"
               name="username"
-              placeholder="Username"
-              value="username"
+              placeholder="username"
             />
           </label>
           <label class="input input-bordered flex items-center gap-2">
@@ -127,8 +123,7 @@ export const SignUpForm: Component<SignUpFormProps> = ({ setter, toggle }) => {
               type="password"
               class="grow max-w-full"
               name="password"
-              placeholder="Password"
-              value="Password"
+              placeholder="password"
             />
           </label>
           <label class="input input-bordered flex items-center gap-2">
@@ -136,8 +131,7 @@ export const SignUpForm: Component<SignUpFormProps> = ({ setter, toggle }) => {
               type="password"
               class="grow max-w-full"
               name="password-repeat"
-              placeholder="Repeat Password"
-              value="Password"
+              placeholder="repeat password"
             />
           </label>
           <div class="form-control">
