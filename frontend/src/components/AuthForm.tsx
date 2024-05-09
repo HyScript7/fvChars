@@ -1,10 +1,6 @@
 import { Component, createSignal, Setter } from "solid-js";
 
-interface AuthFormProps {
-  setter: Setter<number>;
-}
-
-export const AuthForm: Component<AuthFormProps> = ({ setter }) => {
+export const AuthForm: Component =  () => {
   const [showSignUp, setShowSignUp] = createSignal<number>(0);
 
   const handleToggle = () => setShowSignUp((prev) => (prev + 1) % 2);
@@ -14,9 +10,9 @@ export const AuthForm: Component<AuthFormProps> = ({ setter }) => {
       <div class="min-h-[100vh] flex flex-col justify-center min-w-[100vw]">
         <div class="mx-auto card w-96 bg-base-200 shadow-xl min-h-[40vh]">
           {showSignUp() === 1 ? (
-            <SignUpForm setter={setter} toggle={handleToggle} />
+            <SignUpForm setter={setShowSignUp} toggle={handleToggle} />
           ) : (
-            <SignInForm setter={setter} toggle={handleToggle} />
+            <SignInForm setter={setShowSignUp} toggle={handleToggle} />
           )}
         </div>
       </div>
