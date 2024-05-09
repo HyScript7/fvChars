@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Response
+from pydantic import BaseModel, Field
 
 from ...database.models import user_model
 from ...schemas import generic_responses, user_responses
@@ -10,13 +11,33 @@ from ...services.errors import user_errors
 user_controller: APIRouter = APIRouter(prefix="/users")
 
 
+class GuestUserResponse(BaseModel):
+    userid: None = Field(
+        default=None, description="The user's ID - Will always be None for guests"
+    )
+    username: str = Field(
+        default="guest",
+        description="The user's username - Will always be guest for guests (all lowercase)",
+    )
+    displayname: str = Field(
+        default="Guest",
+        description="The user's display name, if there is one, otherwise their username - Will always be Guest for guests (capital first letter)",
+    )
+    created: None = Field(
+        default=None,
+        description="The user's creation time - Will always be None for guests",
+    )
+
+
 @user_controller.get(
     "/",
     status_code=status.HTTP_200_OK,
     response_model=generic_responses.GenericMessageResponse,
 )
 async def root(
-    current_user: user_model.User = Depends(user_service.guest_if_invalid_get_current_user),
+    current_user: user_model.User = Depends(
+        user_service.guest_if_invalid_get_current_user
+    ),
 ):
     if current_user is None:
         return {"message": "Hello Guest"}
@@ -106,3 +127,24 @@ async def update(
         return await user_service.update_password(current_user, password_update)
     except user_errors.InvalidCredentialsError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@user_controller.get(
+    "/whoami",
+    status_code=status.HTTP_200_OK,
+    response_model=user_model.UserPublic,
+    responses={
+        203: {"model": GuestUserResponse},
+    },
+)
+async def update(
+    current_user: user_model.User = Depends(
+        user_service.guest_if_invalid_get_current_user
+    ),
+):
+    if current_user is None:
+        return Response(
+            status_code=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION,
+            content=GuestUserResponse().model_dump_json(),
+        )
+    return current_user
