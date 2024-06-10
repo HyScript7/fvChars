@@ -1,9 +1,33 @@
 from datetime import datetime
 from typing import Any
 
+from pydantic import BaseModel, Field
 from beanie import Document, Link
 
 from . import user_model
+
+
+class CharacterBase(BaseModel):
+    name: str
+
+
+class CharacterCreate(CharacterBase):
+    pass
+
+
+class CharacterPublic(CharacterBase):
+    author: user_model.UserPublic
+    charid: str
+
+
+class CharacterPublicBare(CharacterBase):
+    author: str
+    charid: str
+
+
+class OwnedCharacters(BaseModel):
+    characters: list[CharacterPublicBare]
+    author: user_model.UserPublic
 
 
 class Character(Document):
